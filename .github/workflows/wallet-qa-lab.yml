@@ -1,0 +1,37 @@
+name: Wallet QA Lab checks
+on:
+  push:
+    paths:
+      - 'projects/wallet-qa-lab/**'
+      - '.github/workflows/wallet-qa-lab.yml'
+  pull_request:
+    paths:
+      - 'projects/wallet-qa-lab/**'
+      - '.github/workflows/wallet-qa-lab.yml'
+  workflow_dispatch:
+jobs:
+  unit-and-browser:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/wallet-qa-lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run unit tests
+        run: npm test
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser tests
+        run: npm run test:e2e
+      - name: Save failure report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wallet-qa-playwright-report
+          path: projects/wallet-qa-lab/playwright-report
+          retention-days: 7
