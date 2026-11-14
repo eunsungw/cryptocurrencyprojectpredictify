@@ -1,0 +1,28 @@
+name: Wallet QA checks
+on:
+  push:
+    paths: ['projects/wallet-qa-lab/**']
+  pull_request:
+    paths: ['projects/wallet-qa-lab/**']
+  workflow_dispatch:
+jobs:
+  unit-and-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/wallet-qa-lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wallet-playwright-report
+          path: projects/wallet-qa-lab/playwright-report
+          retention-days: 7
